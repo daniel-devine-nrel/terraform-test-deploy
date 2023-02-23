@@ -12,10 +12,11 @@ provider "aws" {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
-resource "aws_iam_role" "test_lambda_role" {
-  name = "terraform_test_lambda_role"
+resource "aws_iam_policy" "test_lambda_policy" {
+  name        = "terraform_test_lambda_policy"
+  description = "Allows creating log groups and streams and writing to log streams for lambda functions"
 
-  assume_role_policy = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -40,6 +41,31 @@ resource "aws_iam_role" "test_lambda_role" {
       }
     ]
   })
+}
+
+resource "aws_iam_role" "test_lambda_role" {
+  name = "terraform_test_lambda_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "",
+        Effect = "Allow",
+        Principal = {
+          Service = [
+            "lambda.amazonaws.com"
+          ]
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test_lambda_role_attatch" {
+  role       = aws_iam_role.test_lambda_role.name
+  policy_arn = aws_iam_policy.test_lambda_policy.arn
 }
 
 resource "aws_lambda_function" "test_func_1" {
@@ -70,7 +96,7 @@ locals {
 module "eventbridge-lambda-trigger" {
   source  = "daniel-devine-nrel/eventbridge-lambda-trigger/aws"
   version = ">=0.0.0"
-  lambda_config = [for func in local.funcs: {
+  lambda_config = [for func in local.funcs : {
     lambda_name         = func.function_name
     lambda_arn          = func.arn
     lambda_role_arn     = func.role
