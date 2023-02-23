@@ -1,4 +1,4 @@
 variable "lambda_file" {
   type    = string
-  default = "./lambda.py"
+  default = "lambda_deployment.zip"
 }
