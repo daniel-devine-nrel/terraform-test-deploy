@@ -54,7 +54,8 @@ resource "aws_iam_role" "test_lambda_role" {
         Effect = "Allow",
         Principal = {
           Service = [
-            "lambda.amazonaws.com"
+            "lambda.amazonaws.com",
+            "scheduler.amazonaws.com"
           ]
         },
         Action = "sts:AssumeRole"
