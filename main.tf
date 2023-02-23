@@ -59,3 +59,21 @@ resource "aws_lambda_function" "test_func_2" {
   handler       = "test_func_2"
   runtime       = "python3.9"
 }
+
+locals {
+  funcs = [
+    aws_lambda_function.test_func_1,
+    aws_lambda_function.test_func_2
+  ]
+}
+
+module "eventbridge-lambda-trigger" {
+  source  = "daniel-devine-nrel/eventbridge-lambda-trigger/aws"
+  version = ">=0.0.0"
+  lambda_config = [for func in local.funcs: {
+    lambda_name         = func.function_name
+    lambda_arn          = func.arn
+    lambda_role_arn     = func.role
+    schedule_expression = "rate(2 hours)"
+  }]
+}
